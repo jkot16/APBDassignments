@@ -13,7 +13,7 @@ public class TripsController : ControllerBase
   {
     _tripService = tripService;
   }
-
+  // simply get all trips that exist
   [HttpGet]
   public async Task<IActionResult> GetTrips(CancellationToken cancellationToken)
   {

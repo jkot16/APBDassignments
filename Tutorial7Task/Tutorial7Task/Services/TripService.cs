@@ -18,6 +18,7 @@ public class TripService : ITripService
 
     public async Task<List<GetAllTripsResponse>> GetAllTripsAsync(CancellationToken cancellationToken)
 {
+    // select all trips with chosen data
     const string sqlTrips = @"
         SELECT 
         IdTrip,
@@ -52,7 +53,7 @@ public class TripService : ITripService
         }
     }
 
-   // We download all countries
+   // We download all countries with @TripId
     const string sqlCountries = @"
         SELECT 
         ct.IdCountry,

@@ -15,6 +15,8 @@ public class ClientService : IClientService
 
     public async Task<bool> ClientExistsAsync(int id, CancellationToken cancellationToken)
     {
+        
+        // SELECT 1 to check if given client exists
         const string sql = @"
             SELECT 1
             FROM Client
@@ -31,7 +33,7 @@ public class ClientService : IClientService
 
     public async Task<List<ClientTripResponse>> GetClientTripsAsync(int id, CancellationToken cancellationToken)
     {
-        // 1) SELECT trips info
+        // 1) SELECT trips with chosen info
         const string sqlTrips = @"
             SELECT 
                 ct.IdTrip,
@@ -67,9 +69,7 @@ public class ClientService : IClientService
                     DateTo       = (DateTime)reader["DateTo"],
                     MaxPeople    = (int)reader["MaxPeople"],
                     RegisteredAt = (int)reader["RegisteredAt"],
-                    PaymentDate  = reader.IsDBNull(reader.GetOrdinal("PaymentDate"))
-                                     ? null
-                                     : (int)reader["PaymentDate"],
+                    PaymentDate  = reader.IsDBNull(reader.GetOrdinal("PaymentDate")) ? null : (int)reader["PaymentDate"],
                 });
             }
         }
@@ -77,7 +77,7 @@ public class ClientService : IClientService
         if (trips.Count == 0)
             return trips;
 
-        // SELECT countries for based on tripId
+        // SELECT countries based on tripId
         const string sqlCountries = @"
             SELECT 
              ct.IdTrip,
@@ -108,6 +108,8 @@ public class ClientService : IClientService
 
     public async Task<int> CreateClientAsync(CreateClientRequest request, CancellationToken cancellationToken)
     {
+        
+        // insert client info with chosen data (cast(scope_identity()) to add id automatically
         const string sqlInsertClient = @"
         INSERT INTO Client (FirstName, LastName, Email, Telephone, Pesel)
         VALUES (@FirstName, @LastName, @Email, @Telephone, @Pesel);
@@ -149,6 +151,8 @@ public class ClientService : IClientService
 
     public async Task<bool> TripExistsAsync(int tripId, CancellationToken cancellationToken)
     {
+        
+        // SELECT 1 to check if given trip exists
         const string sql = @"
         SELECT 1
         FROM Trip
@@ -166,12 +170,16 @@ public class ClientService : IClientService
 
     public async Task<bool> IsTripFullAsync(int tripId, CancellationToken cancellationToken)
     {
+        
+        // SELECT Max number of people for given trip
         const string sqlTripMaxPeople = @"
         SELECT MaxPeople
         FROM Trip
         WHERE IdTrip = @tripId;
         ";
 
+        
+        // select actual count of people that will be attending this given trip
         const string sqlActualCount = @"
         SELECT COUNT(*)
         FROM Client_Trip
@@ -201,7 +209,9 @@ public class ClientService : IClientService
 
     public async Task RegisterClientTripAsync(int clientId, int tripId, CancellationToken cancellationToken)
     {
-
+        
+        
+        // INSERT given info into Client_Trip table
         const string sqlInsertClientTrip = @"
         INSERT INTO Client_Trip(IdClient, IdTrip, RegisteredAt,PaymentDate)
         VALUES (@IdClient, @IdTrip, @RegisteredAt, NULL);
@@ -222,4 +232,43 @@ public class ClientService : IClientService
         await tx.CommitAsync(cancellationToken);
         
     }
+
+    public async Task<bool> RegistrationExistsAsync(int clientId, int tripId, CancellationToken cancellationToken)
+    {
+        
+        // SELECT 1 to check if given registration for clientId and IdTrip exists
+        const string sql = @"
+        SELECT 1
+        FROM Client_Trip
+        WHERE IdClient = @clientId AND IdTrip   = @tripId;
+    ";
+
+        await using var conn = new SqlConnection(_cs);
+        await conn.OpenAsync(cancellationToken);
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@clientId", clientId);
+        cmd.Parameters.AddWithValue("@tripId", tripId);
+        var result = await cmd.ExecuteScalarAsync(cancellationToken);
+        return result != null;
+    }
+
+    public async Task UnregisterClientTripAsync(int clientId, int tripId, CancellationToken cancellationToken)
+    {
+        
+        // DELETE data based on clientId and tripId
+        const string sql = @"
+        DELETE FROM Client_Trip
+        WHERE IdClient = @clientId AND IdTrip   = @tripId;
+    ";
+
+        await using var conn = new SqlConnection(_cs);
+        await conn.OpenAsync(cancellationToken);
+        await using var tx  = await conn.BeginTransactionAsync(cancellationToken) as SqlTransaction;
+        await using var cmd = new SqlCommand(sql, conn, tx);
+        cmd.Parameters.AddWithValue("@clientId",clientId);
+        cmd.Parameters.AddWithValue("@tripId", tripId);
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+    }
+
 }

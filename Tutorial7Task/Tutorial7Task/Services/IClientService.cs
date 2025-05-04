@@ -18,6 +18,8 @@ public interface IClientService
     Task RegisterClientTripAsync(int clientId, int tripId, CancellationToken cancellationToken);
     
     
+    Task<bool> RegistrationExistsAsync(int clientId, int tripId, CancellationToken cancellationToken);
     
+    Task UnregisterClientTripAsync(int clientId, int tripId, CancellationToken cancellationToken);
     
 }
