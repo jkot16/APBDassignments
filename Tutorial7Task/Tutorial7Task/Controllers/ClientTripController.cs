@@ -43,4 +43,26 @@ public class ClientTripController : ControllerBase
             new CreateClientResponse {IdClient = newId}
             );
     }
+
+    [HttpPut("{id}/trips/{tripId}")]
+    public async Task<IActionResult> RegisterClientToTrip(int id, int tripId, CancellationToken cancellationToken)
+    {
+        if (!await _clientService.ClientExistsAsync(id, cancellationToken))
+        {
+            return NotFound($"Client {id} does not exist");
+        }
+
+        if (!await _clientService.TripExistsAsync(tripId, cancellationToken))
+        {
+            return NotFound($"Trip {tripId} does not exist");
+        }
+
+        if (await _clientService.IsTripFullAsync(tripId, cancellationToken))
+        {
+            return Conflict($"Trip {tripId} has reached maximum participants");
+        }
+        
+        await _clientService.RegisterClientTripAsync(id, tripId, cancellationToken);
+        return NoContent();
+    }
 }

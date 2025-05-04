@@ -10,4 +10,14 @@ public interface IClientService
     Task<bool> ClientExistsAsync(int id, CancellationToken cancellationToken);
     
     Task<int> CreateClientAsync(CreateClientRequest request, CancellationToken cancellationToken);
+    
+    Task<bool> TripExistsAsync(int id, CancellationToken cancellationToken);
+    
+    Task<bool> IsTripFullAsync(int id, CancellationToken cancellationToken);
+    
+    Task RegisterClientTripAsync(int clientId, int tripId, CancellationToken cancellationToken);
+    
+    
+    
+    
 }

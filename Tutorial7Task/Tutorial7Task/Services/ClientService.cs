@@ -24,7 +24,7 @@ public class ClientService : IClientService
         await using var conn = new SqlConnection(_cs);
         await conn.OpenAsync(cancellationToken);
         await using var cmd = new SqlCommand(sql, conn);
-        cmd.Parameters.AddWithValue("@id", id);   // <-- tu parametr @id
+        cmd.Parameters.AddWithValue("@id", id);  
         var result = await cmd.ExecuteScalarAsync(cancellationToken);
         return result != null;
     }
@@ -145,5 +145,81 @@ public class ClientService : IClientService
         {
             tx.Dispose();
         }
+    }
+
+    public async Task<bool> TripExistsAsync(int tripId, CancellationToken cancellationToken)
+    {
+        const string sql = @"
+        SELECT 1
+        FROM Trip
+        WHERE IdTrip = @tripId;
+        ";
+        
+        await using var conn = new SqlConnection(_cs);
+        await conn.OpenAsync(cancellationToken);
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@tripId", tripId);  
+        var result = await cmd.ExecuteScalarAsync(cancellationToken);
+        return result != null;
+        
+    }
+
+    public async Task<bool> IsTripFullAsync(int tripId, CancellationToken cancellationToken)
+    {
+        const string sqlTripMaxPeople = @"
+        SELECT MaxPeople
+        FROM Trip
+        WHERE IdTrip = @tripId;
+        ";
+
+        const string sqlActualCount = @"
+        SELECT COUNT(*)
+        FROM Client_Trip
+        WHERE IdTrip = @tripId;
+        ";
+        
+        await using var conn = new SqlConnection(_cs);
+        await conn.OpenAsync(cancellationToken);
+
+        int maxPeople;
+
+        await using (var cmd = new SqlCommand(sqlTripMaxPeople, conn))
+        {
+            cmd.Parameters.AddWithValue("@tripId", tripId);
+            var maxPeopleObj = await cmd.ExecuteScalarAsync(cancellationToken);
+            maxPeople = (int)maxPeopleObj;
+        }
+
+        await using (var cmd1 = new SqlCommand(sqlActualCount, conn))
+        {
+            cmd1.Parameters.AddWithValue("@tripId", tripId);
+            var maxPeopleObj = await cmd1.ExecuteScalarAsync(cancellationToken);
+            var currentMaxPeople = (int)maxPeopleObj;
+            return currentMaxPeople >= maxPeople;
+        }
+    }
+
+    public async Task RegisterClientTripAsync(int clientId, int tripId, CancellationToken cancellationToken)
+    {
+
+        const string sqlInsertClientTrip = @"
+        INSERT INTO Client_Trip(IdClient, IdTrip, RegisteredAt,PaymentDate)
+        VALUES (@IdClient, @IdTrip, @RegisteredAt, NULL);
+        ";
+        
+        var registeredAt = int.Parse(DateTime.Now.ToString("yyyyMMdd"));
+
+        
+        await using var conn = new SqlConnection(_cs);
+        await conn.OpenAsync(cancellationToken);
+        await using var tx = await conn.BeginTransactionAsync(cancellationToken) as SqlTransaction;
+        
+        await using var cmd = new SqlCommand(sqlInsertClientTrip, conn, tx);
+        cmd.Parameters.AddWithValue("@IdClient", clientId);
+        cmd.Parameters.AddWithValue("@IdTrip", tripId);
+        cmd.Parameters.AddWithValue("@RegisteredAt", registeredAt);
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+        await tx.CommitAsync(cancellationToken);
+        
     }
 }
