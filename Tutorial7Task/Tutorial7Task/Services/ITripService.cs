@@ -1,5 +1,5 @@
-﻿using Tutorial7Task.Dtos.Read;
-
+﻿using Tutorial7Task.Services;
+using Tutorial7Task.Contracts.Responses;
 namespace Tutorial7Task.Services;
 
 public interface ITripService

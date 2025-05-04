@@ -1,6 +1,6 @@
 ﻿using System.Data;
 using Microsoft.Data.SqlClient;
-using Tutorial7Task.Dtos.Read;
+using Tutorial7Task.Contracts.Responses;
 
 
 namespace Tutorial7Task.Services;

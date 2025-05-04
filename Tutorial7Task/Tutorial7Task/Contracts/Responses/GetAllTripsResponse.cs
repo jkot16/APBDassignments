@@ -1,4 +1,4 @@
-﻿namespace Tutorial7Task.Dtos.Read;
+﻿namespace Tutorial7Task.Contracts.Responses;
 
 public class GetAllTripsResponse
 {
@@ -8,6 +8,8 @@ public class GetAllTripsResponse
     public DateTime DateFrom { get; set; }
     public DateTime DateTo { get; set; }
     public int MaxPeople { get; set; }
+    public int RegisteredAt { get; set; }
+    public int? PaymentDate { get; set; }
     public List<CountryResponse> Countries { get; set; } = new();
     
     

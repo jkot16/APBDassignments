@@ -1,4 +1,4 @@
-﻿namespace Tutorial7Task.Dtos.Read;
+﻿namespace Tutorial7Task.Contracts.Responses;
 
 public class CountryResponse
 {

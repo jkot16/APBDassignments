@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Microsoft.Data.SqlClient;
+using Tutorial7Task.Contracts.Requests;
 using Tutorial7Task.Contracts.Responses;
 
 
@@ -103,5 +104,46 @@ public class ClientService : IClientService
         }
 
         return trips;
+    }
+
+    public async Task<int> CreateClientAsync(CreateClientRequest request, CancellationToken cancellationToken)
+    {
+        const string sqlInsertClient = @"
+        INSERT INTO Client (FirstName, LastName, Email, Telephone, Pesel)
+        VALUES (@FirstName, @LastName, @Email, @Telephone, @Pesel);
+        SELECT CAST(SCOPE_IDENTITY() as int);
+        ";
+        
+        await using var conn = new SqlConnection(_cs);
+        await conn.OpenAsync(cancellationToken);
+        
+        var dbTrans = await conn.BeginTransactionAsync(cancellationToken);
+        
+        var tx = (SqlTransaction)dbTrans;
+
+        try
+        {
+            await using var cmd = new SqlCommand(sqlInsertClient, conn, tx);
+            cmd.Parameters.AddWithValue("@FirstName", request.FirstName);
+            cmd.Parameters.AddWithValue("@LastName", request.LastName);
+            cmd.Parameters.AddWithValue("@Email", request.Email);
+            cmd.Parameters.AddWithValue("@Telephone", request.Telephone);
+            cmd.Parameters.AddWithValue("@Pesel", request.Pesel);
+
+            var idObj = await cmd.ExecuteScalarAsync(cancellationToken);
+            int newId = Convert.ToInt32(idObj);
+
+            await tx.CommitAsync(cancellationToken);
+            return newId;
+        }
+        catch
+        {
+            await tx.RollbackAsync(cancellationToken);
+            throw;
+        }
+        finally
+        {
+            tx.Dispose();
+        }
     }
 }
