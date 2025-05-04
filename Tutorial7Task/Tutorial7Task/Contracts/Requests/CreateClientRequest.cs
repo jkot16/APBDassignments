@@ -16,6 +16,6 @@ public class CreateClientRequest
     [Required, Phone, StringLength(12)]
     public string Telephone { get; set; } = null!;
 
-    [Required, RegularExpression(@"^\d{11}$")]
+    [Required]
     public string Pesel { get; set; } = null!; 
 }
