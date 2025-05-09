@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
 using Tutorial8Task.Contracts.Requests;
 using Tutorial8Task.Contracts.Responses;
-using Tutorial8Task.Services;
+
 
 namespace Tutorial8Task.Services
 {
