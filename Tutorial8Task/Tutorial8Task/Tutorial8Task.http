@@ -1,0 +1,6 @@
+@Tutorial8Task_HostAddress = http://localhost:5263
+
+GET {{Tutorial8Task_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
